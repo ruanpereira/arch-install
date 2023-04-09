@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2012 Tom Wambold
+# Copyright (c) 2012 Tom Wambold and aktsu_ruan
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -42,42 +42,42 @@
 DRIVE='/dev/sda'
 
 # Hostname of the installed machine.
-HOSTNAME='host100'
+HOSTNAME='gh0st'
 
 # Encrypt everything (except /boot).  Leave blank to disable.
-ENCRYPT_DRIVE='TRUE'
+ENCRYPT_DRIVE=
 
 # Passphrase used to encrypt the drive (leave blank to be prompted).
-DRIVE_PASSPHRASE='a'
+DRIVE_PASSPHRASE=
 
 # Root password (leave blank to be prompted).
-ROOT_PASSWORD='a'
+ROOT_PASSWORD=
 
 # Main user to create (by default, added to wheel group, and others).
-USER_NAME='user'
+USER_NAME='gh0st'
 
 # The main user's password (leave blank to be prompted).
-USER_PASSWORD='a'
+USER_PASSWORD=
 
 # System timezone.
-TIMEZONE='America/New_York'
+TIMEZONE='America/Fortaleza'
 
 # Have /tmp on a tmpfs or not.  Leave blank to disable.
 # Only leave this blank on systems with very little RAM.
 TMP_ON_TMPFS='TRUE'
 
-KEYMAP='us'
+KEYMAP='br-abnt2'
 # KEYMAP='dvorak'
 
 # Choose your video driver
 # For Intel
-VIDEO_DRIVER="i915"
+#VIDEO_DRIVER="i915"
 # For nVidia
 #VIDEO_DRIVER="nouveau"
 # For ATI
 #VIDEO_DRIVER="radeon"
 # For generic stuff
-#VIDEO_DRIVER="vesa"
+VIDEO_DRIVER="vesa"
 
 # Wireless device, leave blank to not use wireless and use DHCP instead.
 WIRELESS_DEVICE="wlan0"
@@ -227,11 +227,11 @@ configure() {
 partition_drive() {
     local dev="$1"; shift
 
-    # 100 MB /boot partition, everything else under LVM
+    # 512 MB /boot partition, everything else under LVM
     parted -s "$dev" \
         mklabel msdos \
-        mkpart primary ext2 1 100M \
-        mkpart primary ext2 100M 100% \
+        mkpart primary ext2 1 512M \
+        mkpart primary ext2 512M 100% \
         set 1 boot on \
         set 2 LVM on
 }
@@ -252,8 +252,8 @@ setup_lvm() {
     pvcreate "$partition"
     vgcreate "$volgroup" "$partition"
 
-    # Create a 1GB swap partition
-    lvcreate -C y -L1G "$volgroup" -n swap
+    # Create a 5GB swap partition
+    lvcreate -C y -L5G "$volgroup" -n swap
 
     # Use the rest of the space for root
     lvcreate -l '+100%FREE' "$volgroup" -n root
@@ -265,7 +265,7 @@ setup_lvm() {
 format_filesystems() {
     local boot_dev="$1"; shift
 
-    mkfs.ext2 -L boot "$boot_dev"
+    mkfs.fat -F 32 -L boot "$boot_dev"
     mkfs.ext4 -L root /dev/vg00/root
     mkswap /dev/vg00/swap
 }
@@ -282,8 +282,8 @@ mount_filesystems() {
 install_base() {
     echo 'Server = http://mirrors.kernel.org/archlinux/$repo/os/$arch' >> /etc/pacman.d/mirrorlist
 
-    pacstrap /mnt base base-devel
-    pacstrap /mnt syslinux
+    pacstrap /mnt base base-devel linux linux-headers linux-firmware intel-ucode sudo nano vim git neofetch networkmanager dhcpcd pulseaudio bluez 
+    man-db man-pages texinfo 
 }
 
 unmount_filesystems() {
